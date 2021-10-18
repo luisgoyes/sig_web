@@ -1,0 +1,2086 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+
+	    <link rel="stylesheet" href="https://npmcdn.com/leaflet@1.0.0-rc.1/dist/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="https://rawgit.com/MarcChasse/leaflet.ScaleFactor/master/leaflet.scalefactor.min.css">
+        <link rel="stylesheet" href="glass/leaflet.magnifyingglass.css" />
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.css" />
+
+
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+
+        }
+
+
+	#norte{
+	position:fixed;
+	width:2%;
+	left: 3%;
+	padding: 1.2%;
+	}
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map"  style="z-index:0">
+				<img id="norte" src="norte.png" style="z-index:9999" ></img>
+        </div>
+	    <script src="https://npmcdn.com/jquery@3.0.0/dist/jquery.min.js"></script>
+	    <script src="https://npmcdn.com/leaflet@1.0.0-rc.1/dist/leaflet.js"></script>
+	    <script src="https://rawgit.com/MarcChasse/leaflet.ScaleFactor/master/leaflet.scalefactor.min.js"></script>
+
+	    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.js"></script>
+	    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.css" />
+
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+
+        <link rel="stylesheet" href="minimap/Control.MiniMap.css" />
+	    <script src="minimap/Control.MiniMap.js" type="text/javascript"></script>
+
+        <script src="graticule/Leaflet.Graticule.js"></script>
+	    <script src="glass/leaflet.magnifyingglass.js"></script>
+
+
+        <script src="data/indice_de_hansen_2.js"></script>
+        <script src="data/factor_de_rutamunicipios_vs_municipios_3.js"></script>
+        <script src="data/trazado_de_velocidad_municipios_vs_municipios_4.js"></script>
+        <script src="data/factor_de_ruta_zonas_productoras_vs_municipios_5.js"></script>
+        <script src="data/trazado_de_velocidad_zonas_productoras_vs_municipios_6.js"></script>
+        <script src="data/tiempo_de_viaje_zonas_productoras_municipiosminutos_7.js"></script>
+        <script src="data/Municipios_8.js"></script>
+        <script src="data/Municipios_sep_9.js"></script>
+        <script src="data/vias_centros_10.js"></script>
+        <script src="data/cultivos_munic_3115_11.js"></script>
+        <script src="data/wgs84_centroides_multilotes_12.js"></script>
+
+
+        <link rel="stylesheet" href="betterscale/L.Control.BetterScale.css" />
+    	<script src="betterscale/L.Control.BetterScale.js"></script>
+
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[0.4311517868697012,-79.02921998780101],[2.826868246909532,-76.48769758659418]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_StamenTerrain_0');
+        map.getPane('pane_StamenTerrain_0').style.zIndex = 400;
+        var layer_StamenTerrain_0 = L.tileLayer('http://a.tile.stamen.com/terrain/{z}/{x}/{y}.png', {
+            pane: 'pane_StamenTerrain_0',
+            opacity: 1.0,
+            attribution: '<a href="http://maps.stamen.com/">Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_StamenTerrain_0;
+        map.addLayer(layer_StamenTerrain_0);
+        map.createPane('pane_OpenStreetMapmonochrome_1');
+        map.getPane('pane_OpenStreetMapmonochrome_1').style.zIndex = 401;
+        var layer_OpenStreetMapmonochrome_1 = L.tileLayer('http://a.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMapmonochrome_1',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_OpenStreetMapmonochrome_1;
+        map.addLayer(layer_OpenStreetMapmonochrome_1);
+        function pop_indice_de_hansen_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(feature.properties['gridcode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_indice_de_hansen_2_0(feature) {
+            switch(String(feature.properties['gridcode'])) {
+                case '1':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,25,28,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,85,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,144,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,192,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,240,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,225,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '9':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(138,204,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '10':
+                    return {
+                pane: 'pane_indice_de_hansen_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,177,81,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_indice_de_hansen_2');
+        map.getPane('pane_indice_de_hansen_2').style.zIndex = 402;
+        map.getPane('pane_indice_de_hansen_2').style['mix-blend-mode'] = 'normal';
+        var layer_indice_de_hansen_2 = new L.geoJson(json_indice_de_hansen_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_indice_de_hansen_2',
+            layerName: 'layer_indice_de_hansen_2',
+            pane: 'pane_indice_de_hansen_2',
+            onEachFeature: pop_indice_de_hansen_2,
+            style: style_indice_de_hansen_2_0,
+        });
+        bounds_group.addLayer(layer_indice_de_hansen_2);
+        map.addLayer(layer_indice_de_hansen_2);
+        function pop_factor_de_rutamunicipios_vs_municipios_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(feature.properties['gridcode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_factor_de_rutamunicipios_vs_municipios_3_0(feature) {
+            switch(String(feature.properties['gridcode'])) {
+                case '1':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,150,65,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,177,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(138,204,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,225,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,240,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,192,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '9':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,144,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '10':
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,85,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,25,28,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_factor_de_rutamunicipios_vs_municipios_3');
+        map.getPane('pane_factor_de_rutamunicipios_vs_municipios_3').style.zIndex = 403;
+        map.getPane('pane_factor_de_rutamunicipios_vs_municipios_3').style['mix-blend-mode'] = 'normal';
+        var layer_factor_de_rutamunicipios_vs_municipios_3 = new L.geoJson(json_factor_de_rutamunicipios_vs_municipios_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_factor_de_rutamunicipios_vs_municipios_3',
+            layerName: 'layer_factor_de_rutamunicipios_vs_municipios_3',
+            pane: 'pane_factor_de_rutamunicipios_vs_municipios_3',
+            onEachFeature: pop_factor_de_rutamunicipios_vs_municipios_3,
+            style: style_factor_de_rutamunicipios_vs_municipios_3_0,
+        });
+        bounds_group.addLayer(layer_factor_de_rutamunicipios_vs_municipios_3);
+        map.addLayer(layer_factor_de_rutamunicipios_vs_municipios_3);
+        function pop_trazado_de_velocidad_municipios_vs_municipios_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(feature.properties['gridcode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_trazado_de_velocidad_municipios_vs_municipios_4_0(feature) {
+            switch(String(feature.properties['gridcode'])) {
+                case '1':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,150,65,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,177,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(138,204,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,225,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,240,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,192,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '9':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,144,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '10':
+                    return {
+                pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,85,56,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_trazado_de_velocidad_municipios_vs_municipios_4');
+        map.getPane('pane_trazado_de_velocidad_municipios_vs_municipios_4').style.zIndex = 404;
+        map.getPane('pane_trazado_de_velocidad_municipios_vs_municipios_4').style['mix-blend-mode'] = 'normal';
+        var layer_trazado_de_velocidad_municipios_vs_municipios_4 = new L.geoJson(json_trazado_de_velocidad_municipios_vs_municipios_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_trazado_de_velocidad_municipios_vs_municipios_4',
+            layerName: 'layer_trazado_de_velocidad_municipios_vs_municipios_4',
+            pane: 'pane_trazado_de_velocidad_municipios_vs_municipios_4',
+            onEachFeature: pop_trazado_de_velocidad_municipios_vs_municipios_4,
+            style: style_trazado_de_velocidad_municipios_vs_municipios_4_0,
+        });
+        bounds_group.addLayer(layer_trazado_de_velocidad_municipios_vs_municipios_4);
+        map.addLayer(layer_trazado_de_velocidad_municipios_vs_municipios_4);
+        function pop_factor_de_ruta_zonas_productoras_vs_municipios_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(feature.properties['gridcode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_factor_de_ruta_zonas_productoras_vs_municipios_5_0(feature) {
+            switch(String(feature.properties['gridcode'])) {
+                case '1':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,150,65,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,177,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(138,204,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,225,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,240,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,192,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '9':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,144,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '10':
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,85,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,25,28,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_factor_de_ruta_zonas_productoras_vs_municipios_5');
+        map.getPane('pane_factor_de_ruta_zonas_productoras_vs_municipios_5').style.zIndex = 405;
+        map.getPane('pane_factor_de_ruta_zonas_productoras_vs_municipios_5').style['mix-blend-mode'] = 'normal';
+        var layer_factor_de_ruta_zonas_productoras_vs_municipios_5 = new L.geoJson(json_factor_de_ruta_zonas_productoras_vs_municipios_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_factor_de_ruta_zonas_productoras_vs_municipios_5',
+            layerName: 'layer_factor_de_ruta_zonas_productoras_vs_municipios_5',
+            pane: 'pane_factor_de_ruta_zonas_productoras_vs_municipios_5',
+            onEachFeature: pop_factor_de_ruta_zonas_productoras_vs_municipios_5,
+            style: style_factor_de_ruta_zonas_productoras_vs_municipios_5_0,
+        });
+        bounds_group.addLayer(layer_factor_de_ruta_zonas_productoras_vs_municipios_5);
+        map.addLayer(layer_factor_de_ruta_zonas_productoras_vs_municipios_5);
+        function pop_trazado_de_velocidad_zonas_productoras_vs_municipios_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(feature.properties['gridcode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_trazado_de_velocidad_zonas_productoras_vs_municipios_6_0(feature) {
+            switch(String(feature.properties['gridcode'])) {
+                case '1':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,150,65,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,177,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(138,204,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,225,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,240,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,192,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '9':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,144,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '10':
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,85,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,25,28,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6');
+        map.getPane('pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6').style.zIndex = 406;
+        map.getPane('pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6').style['mix-blend-mode'] = 'normal';
+        var layer_trazado_de_velocidad_zonas_productoras_vs_municipios_6 = new L.geoJson(json_trazado_de_velocidad_zonas_productoras_vs_municipios_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+            layerName: 'layer_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+            pane: 'pane_trazado_de_velocidad_zonas_productoras_vs_municipios_6',
+            onEachFeature: pop_trazado_de_velocidad_zonas_productoras_vs_municipios_6,
+            style: style_trazado_de_velocidad_zonas_productoras_vs_municipios_6_0,
+        });
+        bounds_group.addLayer(layer_trazado_de_velocidad_zonas_productoras_vs_municipios_6);
+        map.addLayer(layer_trazado_de_velocidad_zonas_productoras_vs_municipios_6);
+        function pop_tiempo_de_viaje_zonas_productoras_municipiosminutos_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Id'] !== null ? autolinker.link(feature.properties['Id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['gridcode'] !== null ? autolinker.link(feature.properties['gridcode'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_tiempo_de_viaje_zonas_productoras_municipiosminutos_7_0(feature) {
+            switch(String(feature.properties['gridcode'])) {
+                case '1':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(26,150,65,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,177,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(138,204,98,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,225,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,240,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,192,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '8':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,190,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '9':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,144,83,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '10':
+                    return {
+                pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,85,56,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7');
+        map.getPane('pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7').style.zIndex = 407;
+        map.getPane('pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7').style['mix-blend-mode'] = 'normal';
+        var layer_tiempo_de_viaje_zonas_productoras_municipiosminutos_7 = new L.geoJson(json_tiempo_de_viaje_zonas_productoras_municipiosminutos_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+            layerName: 'layer_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+            pane: 'pane_tiempo_de_viaje_zonas_productoras_municipiosminutos_7',
+            onEachFeature: pop_tiempo_de_viaje_zonas_productoras_municipiosminutos_7,
+            style: style_tiempo_de_viaje_zonas_productoras_municipiosminutos_7_0,
+        });
+        bounds_group.addLayer(layer_tiempo_de_viaje_zonas_productoras_municipiosminutos_7);
+        map.addLayer(layer_tiempo_de_viaje_zonas_productoras_municipiosminutos_7);
+        function pop_Municipios_8(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CCDGO'] !== null ? autolinker.link(feature.properties['MPIO_CCDGO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CNMBR'] !== null ? autolinker.link(feature.properties['MPIO_CNMBR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_NAREA'] !== null ? autolinker.link(feature.properties['MPIO_NAREA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['POBLA2018'] !== null ? autolinker.link(feature.properties['POBLA2018'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ASEM2007ha'] !== null ? autolinker.link(feature.properties['ASEM2007ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ACOS2007HA'] !== null ? autolinker.link(feature.properties['ACOS2007HA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2007t'] !== null ? autolinker.link(feature.properties['PROD2007t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2007tha'] !== null ? autolinker.link(feature.properties['REN2007tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ASEM2008ha'] !== null ? autolinker.link(feature.properties['ASEM2008ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ACOS2008ha'] !== null ? autolinker.link(feature.properties['ACOS2008ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2008t'] !== null ? autolinker.link(feature.properties['PROD2008t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2008tha'] !== null ? autolinker.link(feature.properties['REN2008tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ASEM2009ha'] !== null ? autolinker.link(feature.properties['ASEM2009ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ACOS2009ha'] !== null ? autolinker.link(feature.properties['ACOS2009ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2009t'] !== null ? autolinker.link(feature.properties['PROD2009t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2009tha'] !== null ? autolinker.link(feature.properties['REN2009tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COD_MUN'] !== null ? autolinker.link(feature.properties['COD_MUN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2010ha'] !== null ? autolinker.link(feature.properties['ARSE2010ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2010ha'] !== null ? autolinker.link(feature.properties['ARCO2010ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PRODU2010t'] !== null ? autolinker.link(feature.properties['PRODU2010t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2010tha'] !== null ? autolinker.link(feature.properties['REN2010tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2011ha'] !== null ? autolinker.link(feature.properties['ARSE2011ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2011ha'] !== null ? autolinker.link(feature.properties['ARCO2011ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PRODU2011t'] !== null ? autolinker.link(feature.properties['PRODU2011t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2011tha'] !== null ? autolinker.link(feature.properties['REN2011tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2012ha'] !== null ? autolinker.link(feature.properties['ARSE2012ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2012ha'] !== null ? autolinker.link(feature.properties['ARCO2012ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2012t'] !== null ? autolinker.link(feature.properties['PROD2012t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2012tha'] !== null ? autolinker.link(feature.properties['REN2012tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2013ha'] !== null ? autolinker.link(feature.properties['ARSE2013ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2013ha'] !== null ? autolinker.link(feature.properties['ARCO2013ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2013t'] !== null ? autolinker.link(feature.properties['PROD2013t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2013tha'] !== null ? autolinker.link(feature.properties['REN2013tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2014ha'] !== null ? autolinker.link(feature.properties['ARSE2014ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2014ha'] !== null ? autolinker.link(feature.properties['ARCO2014ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PRODU2014t'] !== null ? autolinker.link(feature.properties['PRODU2014t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2014tha'] !== null ? autolinker.link(feature.properties['REN2014tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2015ha'] !== null ? autolinker.link(feature.properties['ARSE2015ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2015ha'] !== null ? autolinker.link(feature.properties['ARCO2015ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2015t'] !== null ? autolinker.link(feature.properties['PROD2015t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2015tha'] !== null ? autolinker.link(feature.properties['REN2015tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2016ha'] !== null ? autolinker.link(feature.properties['ARSE2016ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2016ha'] !== null ? autolinker.link(feature.properties['ARCO2016ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2016t'] !== null ? autolinker.link(feature.properties['PROD2016t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2016tha'] !== null ? autolinker.link(feature.properties['REN2016tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2017ha'] !== null ? autolinker.link(feature.properties['ARSE2017ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2017ha'] !== null ? autolinker.link(feature.properties['ARCO2017ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2017t'] !== null ? autolinker.link(feature.properties['PROD2017t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2017tha'] !== null ? autolinker.link(feature.properties['REN2017tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARSE2018ha'] !== null ? autolinker.link(feature.properties['ARSE2018ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ARCO2018ha'] !== null ? autolinker.link(feature.properties['ARCO2018ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROD2018t'] !== null ? autolinker.link(feature.properties['PROD2018t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['REN2018tha'] !== null ? autolinker.link(feature.properties['REN2018tha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Municipios_8_0() {
+            return {
+                pane: 'pane_Municipios_8',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Municipios_8');
+        map.getPane('pane_Municipios_8').style.zIndex = 408;
+        map.getPane('pane_Municipios_8').style['mix-blend-mode'] = 'normal';
+        var layer_Municipios_8 = new L.geoJson(json_Municipios_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Municipios_8',
+            layerName: 'layer_Municipios_8',
+            pane: 'pane_Municipios_8',
+            onEachFeature: pop_Municipios_8,
+            style: style_Municipios_8_0,
+        });
+        bounds_group.addLayer(layer_Municipios_8);
+        map.addLayer(layer_Municipios_8);
+        function pop_Municipios_sep_9(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CCDGO'] !== null ? autolinker.link(feature.properties['MPIO_CCDGO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CNMBR'] !== null ? autolinker.link(feature.properties['MPIO_CNMBR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID'] !== null ? autolinker.link(feature.properties['ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Municipios_sep_9_0() {
+            return {
+                pane: 'pane_Municipios_sep_9',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Municipios_sep_9');
+        map.getPane('pane_Municipios_sep_9').style.zIndex = 409;
+        map.getPane('pane_Municipios_sep_9').style['mix-blend-mode'] = 'normal';
+        var layer_Municipios_sep_9 = new L.geoJson(json_Municipios_sep_9, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Municipios_sep_9',
+            layerName: 'layer_Municipios_sep_9',
+            pane: 'pane_Municipios_sep_9',
+            onEachFeature: pop_Municipios_sep_9,
+            style: style_Municipios_sep_9_0,
+        });
+        bounds_group.addLayer(layer_Municipios_sep_9);
+        map.addLayer(layer_Municipios_sep_9);
+        function pop_vias_centros_10(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TIPO_VIA'] !== null ? autolinker.link(feature.properties['TIPO_VIA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ESTADO_SUP'] !== null ? autolinker.link(feature.properties['ESTADO_SUP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NUMERO_CAR'] !== null ? autolinker.link(feature.properties['NUMERO_CAR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ACCESIBILI'] !== null ? autolinker.link(feature.properties['ACCESIBILI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NOMBRE_GEO'] !== null ? autolinker.link(feature.properties['NOMBRE_GEO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROYECTO'] !== null ? autolinker.link(feature.properties['PROYECTO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SYMBOL'] !== null ? autolinker.link(feature.properties['SYMBOL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FECHA'] !== null ? autolinker.link(feature.properties['FECHA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['RULEID'] !== null ? autolinker.link(feature.properties['RULEID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID_MULTI'] !== null ? autolinker.link(feature.properties['ID_MULTI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['BK_MULTI'] !== null ? autolinker.link(feature.properties['BK_MULTI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ESCALA'] !== null ? autolinker.link(feature.properties['ESCALA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['VIGENCIA'] !== null ? autolinker.link(feature.properties['VIGENCIA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PK_CUE'] !== null ? autolinker.link(feature.properties['PK_CUE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['GLOBALID'] !== null ? autolinker.link(feature.properties['GLOBALID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SHAPE_Leng'] !== null ? autolinker.link(feature.properties['SHAPE_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_vias_centros_10_0(feature) {
+            switch(String(feature.properties['TIPO_VIA'])) {
+                case '1':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(126,249,77,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '2':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(151,240,123,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '3':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(176,232,169,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '4':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(163,219,191,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '5':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(124,204,196,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '6':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(78,170,201,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '7':
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(42,137,189,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_vias_centros_10',
+                opacity: 1,
+                color: 'rgba(8,104,172,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_vias_centros_10');
+        map.getPane('pane_vias_centros_10').style.zIndex = 410;
+        map.getPane('pane_vias_centros_10').style['mix-blend-mode'] = 'normal';
+        var layer_vias_centros_10 = new L.geoJson(json_vias_centros_10, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_vias_centros_10',
+            layerName: 'layer_vias_centros_10',
+            pane: 'pane_vias_centros_10',
+            onEachFeature: pop_vias_centros_10,
+            style: style_vias_centros_10_0,
+        });
+        bounds_group.addLayer(layer_vias_centros_10);
+        map.addLayer(layer_vias_centros_10);
+        function pop_cultivos_munic_3115_11(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FID_MGN_MP'] !== null ? autolinker.link(feature.properties['FID_MGN_MP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DPTO_CCDGO'] !== null ? autolinker.link(feature.properties['DPTO_CCDGO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CCDGO'] !== null ? autolinker.link(feature.properties['MPIO_CCDGO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CNMBR'] !== null ? autolinker.link(feature.properties['MPIO_CNMBR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CRSLC'] !== null ? autolinker.link(feature.properties['MPIO_CRSLC'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_NAREA'] !== null ? autolinker.link(feature.properties['MPIO_NAREA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_NANO'] !== null ? autolinker.link(feature.properties['MPIO_NANO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DPTO_CNMBR'] !== null ? autolinker.link(feature.properties['DPTO_CNMBR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FID_Zona_C'] !== null ? autolinker.link(feature.properties['FID_Zona_C'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Ar_1'] !== null ? autolinker.link(feature.properties['Shape_Ar_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['area_km2'] !== null ? autolinker.link(feature.properties['area_km2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_cultivos_munic_3115_11_0() {
+            return {
+                pane: 'pane_cultivos_munic_3115_11',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(188,134,16,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_cultivos_munic_3115_11');
+        map.getPane('pane_cultivos_munic_3115_11').style.zIndex = 411;
+        map.getPane('pane_cultivos_munic_3115_11').style['mix-blend-mode'] = 'normal';
+        var layer_cultivos_munic_3115_11 = new L.geoJson(json_cultivos_munic_3115_11, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_cultivos_munic_3115_11',
+            layerName: 'layer_cultivos_munic_3115_11',
+            pane: 'pane_cultivos_munic_3115_11',
+            onEachFeature: pop_cultivos_munic_3115_11,
+            style: style_cultivos_munic_3115_11_0,
+        });
+        bounds_group.addLayer(layer_cultivos_munic_3115_11);
+        map.addLayer(layer_cultivos_munic_3115_11);
+        function pop_wgs84_centroides_multilotes_12(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FID_munici'] !== null ? autolinker.link(feature.properties['FID_munici'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DPTO_CCDGO'] !== null ? autolinker.link(feature.properties['DPTO_CCDGO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CCDGO'] !== null ? autolinker.link(feature.properties['MPIO_CCDGO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_CNMBR'] !== null ? autolinker.link(feature.properties['MPIO_CNMBR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_NAREA'] !== null ? autolinker.link(feature.properties['MPIO_NAREA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MPIO_NANO'] !== null ? autolinker.link(feature.properties['MPIO_NANO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DPTO_CNMBR'] !== null ? autolinker.link(feature.properties['DPTO_CNMBR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID_MUNI'] !== null ? autolinker.link(feature.properties['ID_MUNI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COV_0207'] !== null ? autolinker.link(feature.properties['COV_0207'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['c03_07'] !== null ? autolinker.link(feature.properties['c03_07'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FID_projec'] !== null ? autolinker.link(feature.properties['FID_projec'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Ar_1'] !== null ? autolinker.link(feature.properties['Shape_Ar_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ORIG_FID'] !== null ? autolinker.link(feature.properties['ORIG_FID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['POINT_X'] !== null ? autolinker.link(feature.properties['POINT_X'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['POINT_Y'] !== null ? autolinker.link(feature.properties['POINT_Y'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_wgs84_centroides_multilotes_12_0() {
+            return {
+                pane: 'pane_wgs84_centroides_multilotes_12',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(128,67,36,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(172,91,49,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_wgs84_centroides_multilotes_12');
+        map.getPane('pane_wgs84_centroides_multilotes_12').style.zIndex = 412;
+        map.getPane('pane_wgs84_centroides_multilotes_12').style['mix-blend-mode'] = 'normal';
+        var layer_wgs84_centroides_multilotes_12 = new L.geoJson(json_wgs84_centroides_multilotes_12, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_wgs84_centroides_multilotes_12',
+            layerName: 'layer_wgs84_centroides_multilotes_12',
+            pane: 'pane_wgs84_centroides_multilotes_12',
+            onEachFeature: pop_wgs84_centroides_multilotes_12,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_wgs84_centroides_multilotes_12_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_wgs84_centroides_multilotes_12);
+        map.addLayer(layer_wgs84_centroides_multilotes_12);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/wgs84_centroides_multilotes_12.png" /> wgs84_centroides_multilotes': layer_wgs84_centroides_multilotes_12,'<img src="legend/cultivos_munic_3115_11.png" /> cultivos_munic_3115': layer_cultivos_munic_3115_11,'vias_centros<br /><table><tr><td style="text-align: center;"><img src="legend/vias_centros_10_10.png" /></td><td>1</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_21.png" /></td><td>2</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_32.png" /></td><td>3</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_43.png" /></td><td>4</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_54.png" /></td><td>5</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_65.png" /></td><td>6</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_76.png" /></td><td>7</td></tr><tr><td style="text-align: center;"><img src="legend/vias_centros_10_7.png" /></td><td></td></tr></table>': layer_vias_centros_10,'<img src="legend/Municipios_sep_9.png" /> Municipios_sep': layer_Municipios_sep_9,'<img src="legend/Municipios_8.png" /> Municipios': layer_Municipios_8,'tiempo_de_viaje_zonas_productoras_municipios(minutos)<br /><table><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_0300.png" /></td><td>0-30</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_30601.png" /></td><td>30-60</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_60902.png" /></td><td>60-90</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_901203.png" /></td><td>90-120</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_1201504.png" /></td><td>120-150</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_1501805.png" /></td><td>150-180</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_1802106.png" /></td><td>180-210</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_2102407.png" /></td><td>210-240</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_2402708.png" /></td><td>240-270</td></tr><tr><td style="text-align: center;"><img src="legend/tiempo_de_viaje_zonas_productoras_municipiosminutos_7_2402709.png" /></td><td>240-270</td></tr></table>': layer_tiempo_de_viaje_zonas_productoras_municipiosminutos_7,'trazado_de_velocidad_zonas_productoras_vs_municipios<br /><table><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_10.png" /></td><td>1</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_21.png" /></td><td>2</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_32.png" /></td><td>3</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_43.png" /></td><td>4</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_54.png" /></td><td>5</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_65.png" /></td><td>6</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_76.png" /></td><td>7</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_87.png" /></td><td>8</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_98.png" /></td><td>9</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_109.png" /></td><td>10</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_zonas_productoras_vs_municipios_6_10.png" /></td><td></td></tr></table>': layer_trazado_de_velocidad_zonas_productoras_vs_municipios_6,'factor_de_ruta_zonas_productoras_vs_municipios<br /><table><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_10.png" /></td><td>1</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_21.png" /></td><td>2</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_32.png" /></td><td>3</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_43.png" /></td><td>4</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_54.png" /></td><td>5</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_65.png" /></td><td>6</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_76.png" /></td><td>7</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_87.png" /></td><td>8</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_98.png" /></td><td>9</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_109.png" /></td><td>10</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_ruta_zonas_productoras_vs_municipios_5_10.png" /></td><td></td></tr></table>': layer_factor_de_ruta_zonas_productoras_vs_municipios_5,'trazado_de_velocidad_municipios_vs_municipios<br /><table><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_000750.png" /></td><td>0 - 0.075</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_007501061.png" /></td><td>0.075 - 0.106</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_010601222.png" /></td><td>0.106 - 0.122</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_012201573.png" /></td><td>0.122 - 0.157</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_015702004.png" /></td><td>0.157 - 0.200</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_020002355.png" /></td><td>0.200 - 0.235</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_023503106.png" /></td><td>0.235 - 0.310</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_031005187.png" /></td><td>0.310 - 0.518</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_051806868.png" /></td><td>0.518 - 0.686</td></tr><tr><td style="text-align: center;"><img src="legend/trazado_de_velocidad_municipios_vs_municipios_4_068610009.png" /></td><td>0.686 - 1.000</td></tr></table>': layer_trazado_de_velocidad_municipios_vs_municipios_4,'factor_de_ruta:municipios_vs_municipios<br /><table><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_10.png" /></td><td>1</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_21.png" /></td><td>2</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_32.png" /></td><td>3</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_43.png" /></td><td>4</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_54.png" /></td><td>5</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_65.png" /></td><td>6</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_76.png" /></td><td>7</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_87.png" /></td><td>8</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_98.png" /></td><td>9</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_109.png" /></td><td>10</td></tr><tr><td style="text-align: center;"><img src="legend/factor_de_rutamunicipios_vs_municipios_3_10.png" /></td><td></td></tr></table>': layer_factor_de_rutamunicipios_vs_municipios_3,'indice_de_hansen<br /><table><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_000500.png" /></td><td>0 - 0.050</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_005000961.png" /></td><td>0.050 - 0.096</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_009601422.png" /></td><td>0.096 - 0.142</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_014202033.png" /></td><td>0.142 - 0.203</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_020302684.png" /></td><td>0.203 - 0.268</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_026803415.png" /></td><td>0.268 - 0.341</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_034104376.png" /></td><td>0.341 - 0.437</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_043705557.png" /></td><td>0.437 - 0.555</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_055507098.png" /></td><td>0.555 - 0.709</td></tr><tr><td style="text-align: center;"><img src="legend/indice_de_hansen_2_070910009.png" /></td><td>0.709 - 1.000</td></tr></table>': layer_indice_de_hansen_2,"OpenStreetMap monochrome": layer_OpenStreetMapmonochrome_1,"Stamen Terrain": layer_StamenTerrain_0,}).addTo(map);
+        setBounds();
+        map.addControl(new L.Control.Search({
+            layer: layer_Municipios_sep_9,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'MPIO_CNMBR'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+
+
+	var popup = L.popup();
+	function onMapClick(e) {
+		popup
+			.setLatLng(e.latlng)
+			.setContent("Coordenadas:  " + e.latlng.toString())
+			.openOn(map);
+	}
+
+	map.on('click', onMapClick);
+
+     L.control.scale({position:'bottomleft'}).addTo(map)	;
+
+	    L.latlngGraticule({
+			    showLabel: true,
+			    opacity:0.7,
+			    color: 'black',
+			    zoomInterval: [
+				    {start: 8.0, end: 18, interval: 0.615}
+
+			    ]
+
+		    }).addTo(map);
+
+
+
+	    L.control.betterscale({position:'bottomright'}).addTo(map);
+
+
+        </script>
+
+
+
+    </body>
+</html>

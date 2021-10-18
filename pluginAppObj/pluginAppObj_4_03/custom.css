@@ -1,0 +1,29 @@
+#pluginAppObj_4_03 .error_post_container{
+    width: 99%;
+}
+
+#pluginAppObj_4_03 .error_post_thumb img {
+    float: left;
+    clear:left;
+    width:16px;
+    height:16px;
+}
+
+#pluginAppObj_4_03 .error_post_content {
+    margin-left: 22px;
+}
+
+#pluginAppObj_4_03 iframe.error_post_content {
+    margin-left: 14px;
+}
+
+#pluginAppObj_4_03 .p_error_ui{
+    font-family: "Segoe UI";
+    font-size: 9pt;
+    line-height: 1.8;
+}
+
+#pluginAppObj_4_03 {
+    width: 2560px;
+    max-width: 100%;
+}
